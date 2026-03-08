@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseio.com https://*.firebasedatabase.app;">
-    <title>KRC GLOBAL v31.13</title>
+    <title>KRC GLOBAL v31.14</title>
     <style>
         :root { --bg-dark: #0a0d14; --bg-card: #161b22; --accent-red: #d9534f; --text-main: #e6edf3; --text-dim: #7d8590; --border-color: #30363d; }
         body { background: var(--bg-dark); margin: 0; padding: 0; font-family: -apple-system, sans-serif; color: var(--text-main); overflow: hidden; touch-action: manipulation; }
@@ -33,7 +32,7 @@
         <div class="login-card">
             <img src="krc-logo.png" alt="KRC Logo" style="width: 100px; height: auto; margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto;">
             <h1 style="color:var(--accent-red); margin:0;">KRC GLOBAL</h1>
-            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">v31.13 - Güvenli Kayıt</p>
+            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">v31.14 - Full Force</p>
             <input type="text" id="username" placeholder="Kullanıcı">
             <input type="password" id="password" placeholder="Parola">
             <button class="btn-main" onclick="checkLogin()">GİRİŞ</button>
@@ -71,7 +70,7 @@
                 <input type="text" id="f-slamp" placeholder="Slump (cm)">
             </div>
             <div style="position:fixed; bottom:0; left:0; width:100%; padding:20px; background:var(--bg-dark); display:flex; gap:10px; box-sizing:border-box;">
-                <button class="btn-main" id="save-btn" onclick="processEntry()">BULUTA KAYDET</button>
+                <button class="btn-main" onclick="processEntry()">BULUTA KAYDET</button>
                 <button class="btn-main" style="background:#30363d;" onclick="closeModals()">İPTAL</button>
             </div>
         </div>
@@ -95,14 +94,22 @@
             sinif: ["C-20/25", "C-25/30", "C-30/37", "C-35/45", "C-40/50", "C-45/55", "C-50/60"]
         };
         let daysData = {}; let viewDate = new Date();
-        let isSaving = false; // Çakışma önleyici kilit
+        let lastSyncTime = 0;
 
         async function fetchFromCloud() {
-            if (isSaving) return; // Eğer kayıt yapılıyorsa buluttan veri çekme!
+            // Eğer son 5 saniye içinde bir kayıt yapıldıysa çekme (Silinmeyi önleyen kalkan)
+            if (Date.now() - lastSyncTime < 5000) return;
             try {
                 const res = await fetch(`${DB_URL}/data.json`);
                 const allData = await res.json() || {};
-                daysData = allData.records || {};
+                
+                // Hibrit veri okuma: Hem kök dizin hem 'records' kontrolü
+                let remoteRecords = allData.records || {};
+                if (!allData.hasOwnProperty('records') && !allData.hasOwnProperty('config')) {
+                    remoteRecords = allData;
+                }
+                
+                daysData = remoteRecords;
                 if(allData.config) config = allData.config;
                 renderPage();
                 document.getElementById('sync-status').innerText = "Bulutla Eşitlendi ✅";
@@ -110,16 +117,16 @@
         }
 
         async function saveToCloud() {
-            isSaving = true; // Kilidi kapat
-            document.getElementById('sync-status').innerText = "Buluta Yazılıyor...";
+            lastSyncTime = Date.now(); // Senkronizasyonu dondur
+            document.getElementById('sync-status').innerText = "BULUTA YAZILIYOR...";
             try {
-                await fetch(`${DB_URL}/data.json`, { 
-                    method: 'PUT', 
-                    body: JSON.stringify({ records: daysData, config: config }) 
-                });
-                document.getElementById('sync-status').innerText = "Kayıt Başarılı ✅";
-            } catch (e) { alert("Bulut kayıt hatası!"); }
-            isSaving = false; // Kilidi aç
+                // Veriyi her iki ihtimale karşı temiz bir yapıyla gönder
+                const payload = { records: daysData, config: config };
+                const res = await fetch(`${DB_URL}/data.json`, { method: 'PUT', body: JSON.stringify(payload) });
+                if(res.ok) {
+                    document.getElementById('sync-status').innerText = "KAYIT TAMAM ✅";
+                }
+            } catch (e) { alert("Bulut hatası!"); }
         }
 
         function checkLogin() {
@@ -127,7 +134,7 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('book-container').style.display = 'block';
                 updateSelectMenus(); fetchFromCloud();
-                setInterval(fetchFromCloud, 8000); // Otomatik yenileme
+                setInterval(fetchFromCloud, 10000);
             } else { alert("Hatalı giriş!"); }
         }
 
@@ -162,7 +169,7 @@
             const key = viewDate.toISOString().split('T')[0];
             if(!daysData[key]) daysData[key] = [];
             
-            const newEntry = {
+            daysData[key].push({
                 name: document.getElementById('f-name').value || "İsimsiz",
                 numuneCount: document.getElementById('f-numune').value || "0",
                 done: false,
@@ -174,12 +181,10 @@
                     denetim: document.getElementById('f-denetim').value,
                     sinif: document.getElementById('f-sinif').value
                 }
-            };
-
-            daysData[key].push(newEntry);
+            });
             renderPage(); 
             closeModals();
-            await saveToCloud(); // Kayıt bitene kadar yenileme yapılmaz
+            await saveToCloud();
         }
 
         async function togglePaint(key, i) { 
