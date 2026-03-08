@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseio.com https://*.firebasedatabase.app;">
-    <title>KRC YAPI LABORATUVARI</title>
+    <title>KRC GLOBAL v31.9</title>
     <style>
         :root { --bg-dark: #0a0d14; --bg-card: #161b22; --accent-red: #d9534f; --text-main: #e6edf3; --text-dim: #7d8590; --border-color: #30363d; }
         body { background: var(--bg-dark); margin: 0; padding: 0; font-family: -apple-system, sans-serif; color: var(--text-main); overflow: hidden; touch-action: manipulation; }
@@ -32,8 +32,8 @@
     <div id="login-screen">
         <div class="login-card">
             <img src="krc-logo.png" alt="KRC Logo" style="width: 100px; height: auto; margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto;">
-            <h1 style="color:var(--accent-red); margin:0;">KRC YAPI LABORATUVARI</h1>
-            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">Numune Kayıt Defteri</p>
+            <h1 style="color:var(--accent-red); margin:0;">KRC GLOBAL</h1>
+            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">Kayıt Defteri v31.9</p>
             <input type="text" id="username" placeholder="Kullanıcı">
             <input type="password" id="password" placeholder="Parola">
             <button class="btn-main" onclick="checkLogin()">GİRİŞ</button>
@@ -83,7 +83,6 @@
     <div id="overlay-settings" class="modal-overlay">
         <div class="modal">
             <h2 style="color:var(--accent-red)">LİSTE DÜZENLE</h2>
-            <p style="font-size:12px; color:var(--text-dim)">Yapı Denetim veya Beton Firması ekleyip silebilirsin.</p>
             <select id="settings-type" onchange="loadSettingsList()">
                 <option value="denetim">Yapı Denetimler</option>
                 <option value="firma">Beton Firmaları</option>
@@ -92,7 +91,7 @@
                 <input type="text" id="new-item-val" placeholder="Yeni ekle..." style="margin:0;">
                 <button class="btn-main" style="width:80px; padding:0;" onclick="addNewSettingItem()">EKLE</button>
             </div>
-            <div id="settings-list" style="max-height:300px; overflow-y:auto;"></div>
+            <div id="settings-list" style="max-height:300px; overflow-y:auto; background:var(--bg-card); border-radius:8px;"></div>
             <button class="btn-main" style="background:#30363d; margin-top:20px;" onclick="closeModals()">KAPAT</button>
         </div>
     </div>
@@ -101,8 +100,8 @@
         const DB_URL = "https://krc-ajanda-default-rtdb.europe-west1.firebasedatabase.app/"; 
         
         let config = {
-            denetim: ["A.B.B", "ADŞ Yapı Denetim", "Ankara Yapı Denetim", "Asv Yapı Denetim", "FB Aysam Yapı Denetim", "Keskintek Yapı Denetim", "ZRC Yapı Denetim"],
-            firma: ["Ankara Beton", "Baştaş Beton", "Bek Beton", "Betonel", "Çetinler Beton", "Güven Beton", "Limmer Beton", "Uğural Beton", "Zirve Beton"],
+            denetim: ["A.B.B", "ADŞ Yapı Denetim", "Altındağ Yapı Denetim", "Ankara Yapı Denetim", "Asv Yapı Denetim", "Aybaş Yapı Denetim", "Bahçem Yapı Denetim", "Bayındır Yapı Denetim", "Bolkay HK2 Yapı Denetim", "D.H.M.İ.", "Demer 3M Yapı Denetim", "Engörü Yapı Denetim", "Esen Yapı Denetim", "FB Aysam Yapı Denetim", "İlay Yapı Denetim", "Kare Yapı Denetim", "Kentler Müşavirlik", "Keskintek Yapı Denetim", "Mega Yapı Denetim", "Nace1 Yapı Denetim", "Rotulus Yapı Denetim", "Sarp1 Yapı Denetim", "Sasa Grup", "Sertkaya Yapı Denetim", "Sezz Yapı Denetim", "Yusta Yapı Denetim", "ZRC Yapı Denetim"],
+            firma: ["Ankara Beton", "Baştaş Beton", "Bek Beton", "Betonel", "Çetinler Beton", "Demka Beton", "Güven Beton", "Hasan Sümer Beton", "Kam Beton", "Kazanbel Beton", "Kocalar Beton", "Limmer Beton", "Uğural Beton", "Zirve Beton"],
             sinif: ["C-20/25", "C-25/30", "C-30/37", "C-35/45", "C-40/50", "C-45/55", "C-50/60"]
         };
 
@@ -134,7 +133,6 @@
                 document.getElementById('book-container').style.display = 'block';
                 updateSelectMenus();
                 fetchFromCloud();
-                setInterval(fetchFromCloud, 15000);
             } else { alert("Hatalı giriş!"); }
         }
 
@@ -160,21 +158,24 @@
                         <span style="font-weight:bold; font-size:18px;">${item.name}</span>
                         <span class="numune-badge">${item.numuneCount}</span>
                     </div>
-                </div>`).join('') : '<p style="text-align:center; color:var(--text-dim); margin-top:40px;">Kayıt yok.</p>';
+                </div>`).join('') : '<p style="text-align:center; color:var(--text-dim); margin-top:40px;">Bu tarihte kayıt bulunmuyor.</p>';
         }
 
         function processEntry() {
-            const key = viewDate.toISOString().split('T')[0];
+            const key = viewDate.toISOString().split('T')[0]; // Hangi tarihteyse o tarihe ekler
             if(!daysData[key]) daysData[key] = [];
             daysData[key].push({
-                name: document.getElementById('f-name').value || "İsimsiz",
+                name: document.getElementById('f-name').value || "İsimsiz Şantiye",
                 numuneCount: document.getElementById('f-numune').value || "0",
                 done: false,
                 details: {
                     ortam: document.getElementById('f-ortam').value,
                     beton: document.getElementById('f-beton_sicak').value,
                     slump: document.getElementById('f-slamp').value,
-                    dokum: document.getElementById('f-dokum').value
+                    dokum: document.getElementById('f-dokum').value,
+                    firma: document.getElementById('f-firma').value,
+                    denetim: document.getElementById('f-denetim').value,
+                    sinif: document.getElementById('f-sinif').value
                 }
             });
             saveToCloud(); closeModals();
@@ -184,23 +185,22 @@
         function changeDate(n) { viewDate.setDate(viewDate.getDate() + n); renderPage(); }
         function openAddModal() { updateSelectMenus(); document.querySelectorAll('#overlay-add input').forEach(i=>i.value=""); document.getElementById('overlay-add').style.display='block'; }
         
-        // --- AYARLAR YÖNETİMİ ---
         function openSettings() { loadSettingsList(); document.getElementById('overlay-settings').style.display='block'; }
         function loadSettingsList() {
             const type = document.getElementById('settings-type').value;
             const list = config[type];
             document.getElementById('settings-list').innerHTML = list.map((item, i) => `
-                <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid var(--border-color);">
+                <div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid var(--border-color);">
                     <span>${item}</span>
-                    <span style="color:red; cursor:pointer;" onclick="deleteSettingItem('${type}', ${i})">SİL</span>
+                    <span style="color:red; cursor:pointer; font-weight:bold;" onclick="deleteSettingItem('${type}', ${i})">SİL</span>
                 </div>`).join('');
         }
         function addNewSettingItem() {
             const type = document.getElementById('settings-type').value;
             const val = document.getElementById('new-item-val').value;
-            if(val) { config[type].push(val); document.getElementById('new-item-val').value = ""; saveToCloud(); loadSettingsList(); }
+            if(val) { config[type].push(val); config[type].sort(); document.getElementById('new-item-val').value = ""; saveToCloud(); loadSettingsList(); }
         }
-        function deleteSettingItem(type, i) { if(confirm("Silinsin mi?")) { config[type].splice(i, 1); saveToCloud(); loadSettingsList(); } }
+        function deleteSettingItem(type, i) { if(confirm("Bu öğeyi listeden silmek istediğine emin misin?")) { config[type].splice(i, 1); saveToCloud(); loadSettingsList(); } }
         function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m=>m.style.display='none'); }
     </script>
 </body>
