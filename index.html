@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KRC YAPI LABORATUVARI/title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseio.com https://*.firebasedatabase.app;">
+    <title>KRC GLOBAL v31.6</title>
     <style>
         :root { 
             --bg-dark: #0a0d14; 
@@ -13,58 +14,32 @@
             --text-dim: #7d8590;
             --border-color: #30363d;
         }
-        
         body { background: var(--bg-dark); margin: 0; padding: 0; font-family: -apple-system, sans-serif; color: var(--text-main); overflow: hidden; touch-action: manipulation; }
-        
-        /* Giriş Ekranı */
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; box-sizing: border-box; }
         .login-card { background: var(--bg-card); padding: 35px; border-radius: 12px; border: 1px solid var(--border-color); width: 100%; max-width: 320px; text-align: center; }
-        
         input, select { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 16px; box-sizing: border-box; outline: none; }
-
         #book-container { display: none; width: 100vw; height: 100vh; position: relative; }
-
-        /* Tarih Navigasyonu */
         .date-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px solid var(--accent-red); padding-bottom: 10px; }
         .date-header { font-size: 1.2rem; font-weight: 900; color: var(--accent-red); text-transform: uppercase; margin: 0; }
         .nav-arrow { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--accent-red); padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
         .page-content { padding: 30px 20px 140px 20px; height: 100%; box-sizing: border-box; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .sync-status { font-size: 10px; color: var(--text-dim); text-align: center; margin-bottom: 10px; }
-
-        /* Şantiye Kartları */
         .santiye-card { background: var(--bg-card); margin-bottom: 12px; border-radius: 8px; padding: 18px; border: 1px solid var(--border-color); position: relative; transition: 0.2s; }
         .santiye-card.painted { border-left: 6px solid var(--accent-red); background: #1c1112; }
-        .santiye-card.painted .santiye-name { color: var(--accent-red); }
-        .santiye-card.painted .numune-badge { background: var(--accent-red); color: white; }
-        .check-mark { display: none; margin-left: 8px; font-size: 18px; }
-        .santiye-card.painted .check-mark { display: inline; }
-
-        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .santiye-name { font-weight: bold; font-size: 18px; color: white; }
+        .card-top { display: flex; justify-content: space-between; align-items: center; }
         .numune-badge { background: #30363d; color: var(--text-main); padding: 5px 12px; border-radius: 6px; font-weight: bold; font-size: 14px; }
-
-        .card-actions { display: flex; gap: 12px; justify-content: flex-end; }
         .btn-main { width: 100%; padding: 16px; background: var(--accent-red); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .btn-icon { background: transparent; border: 1px solid var(--border-color); color: var(--text-dim); border-radius: 6px; padding: 10px 18px; font-size: 16px; }
-
-        /* Modallar */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 99999; }
-        .modal { width: 100%; height: 100%; padding: 25px; box-sizing: border-box; overflow-y: auto; }
-        .modal-title { color: var(--accent-red); margin-bottom: 25px; font-size: 1.6rem; font-weight: 900; }
-        
         .fixed-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg-dark) 60%); box-sizing: border-box; }
-        .delete-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--accent-red); color: white; align-items: center; justify-content: center; gap: 20px; z-index: 100; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-card">
-            <img src="krc-logo.png" alt="KRC Logo" style="width: 100px; height: auto; margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto; box-shadow: 0 4px 15px rgba(217, 83, 79, 0.2); border-radius: 10px;">
-            
-            <h1 style="color:var(--accent-red); margin:0;">KRC YAPI LABORATUVARI</h1>
-            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">Numune Kayıt Defteri</p>
+            <img src="krc-logo.png" alt="KRC Logo" style="width: 100px; height: auto; margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto;">
+            <h1 style="color:var(--accent-red); margin:0;">KRC GLOBAL</h1>
+            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">Kayıt Defteri v31.6</p>
             <input type="text" id="username" placeholder="Kullanıcı">
             <input type="password" id="password" placeholder="Parola">
             <button class="btn-main" onclick="checkLogin()">GİRİŞ</button>
@@ -72,162 +47,105 @@
     </div>
 
     <div id="book-container">
-        <div class="page">
-            <div class="page-content">
-                <div class="sync-status" id="sync-status">Bağlanıyor...</div>
-                <div class="date-nav">
-                    <button class="nav-arrow" onclick="changeDate(-1)">❮</button>
-                    <h2 id="date-header" class="date-header">Yükleniyor...</h2>
-                    <button class="nav-arrow" onclick="changeDate(1)">❯</button>
-                </div>
-                <div id="list-container"></div>
+        <div class="page-content">
+            <div class="sync-status" id="sync-status">Bağlanıyor...</div>
+            <div class="date-nav">
+                <button class="nav-arrow" onclick="changeDate(-1)">❮</button>
+                <h2 id="date-header" class="date-header">Yükleniyor...</h2>
+                <button class="nav-arrow" onclick="changeDate(1)">❯</button>
             </div>
-            <div class="fixed-footer">
-                <button class="btn-main" onclick="openAddModal()">+ YENİ ŞANTİYE EKLE</button>
-            </div>
+            <div id="list-container"></div>
+        </div>
+        <div class="fixed-footer">
+            <button class="btn-main" onclick="openAddModal()">+ YENİ ŞANTİYE EKLE</button>
         </div>
     </div>
 
     <div id="overlay-add" class="modal-overlay">
-        <div class="modal">
-            <h2 class="modal-title">YENİ KAYIT</h2>
-            <div style="padding-bottom:120px;">
-                <input type="text" id="f-name" placeholder="Şantiye Adı">
-                <input type="number" id="f-metraj" placeholder="Metraj (m³)" oninput="autoCalcNumune()">
-                <input type="text" id="f-numune" placeholder="Numune Sayısı" readonly style="opacity:0.6">
-                <select id="f-sinif"></select>
-                <select id="f-denetim"></select>
-                <select id="f-firma"></select>
-                <input type="text" id="f-dokum" placeholder="Kat / Bölge">
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="f-ortam" placeholder="Ortam °C">
-                    <input type="text" id="f-beton_sicak" placeholder="Beton °C">
-                </div>
-                <input type="text" id="f-slamp" placeholder="Slump (cm)">
-            </div>
-            <div style="position:fixed; bottom:0; left:0; width:100%; padding:20px; background:var(--bg-dark); display:flex; gap:10px; box-sizing:border-box;">
-                <button class="btn-main" onclick="processEntry()">BULUTA KAYDET</button>
-                <button class="btn-main" style="background:#30363d;" onclick="closeModals()">İPTAL</button>
-            </div>
+        <div style="padding:25px;">
+            <h2 style="color:var(--accent-red)">YENİ ŞANTİYE</h2>
+            <input type="text" id="f-name" placeholder="Şantiye Adı">
+            <input type="number" id="f-metraj" placeholder="Metraj (m³)" oninput="autoCalcNumune()">
+            <input type="text" id="f-numune" placeholder="Numune Sayısı" readonly style="opacity:0.6">
+            <select id="f-sinif"></select>
+            <select id="f-denetim"></select>
+            <select id="f-firma"></select>
+            <button class="btn-main" onclick="processEntry()">BULUTA KAYDET</button>
+            <button class="btn-main" style="background:#30363d; margin-top:10px;" onclick="closeModals()">İPTAL</button>
         </div>
     </div>
 
     <script>
-        // --- AYARLAR ---
-        // Kendi Firebase linkini yapıştırmayı sakın unutma!
+        // --- KONFİGÜRASYON ---
         const DB_URL = "https://krc-ajanda-default-rtdb.europe-west1.firebasedatabase.app/"; 
         
-        const dD = ["A.B.B", "ADŞ Yapı Denetim", "Altındağ Yapı Denetim", "Ankara Yapı Denetim", "Asv Yapı Denetim", "Aybaş Yapı Denetim", "Bahçem Yapı Denetim", "Bayındır Yapı Denetim", "Bolkay HK2 Yapı Denetim", "D.H.M.İ.", "Demer 3M Yapı Denetim", "Engörü Yapı Denetim", "Esen Yapı Denetim", "FB Aysam Yapı Denetim", "İlay Yapı Denetim", "Kare Yapı Denetim", "Kentler Müşavirlik", "Keskintek Yapı Denetim", "Mega Yapı Denetim", "Nace1 Yapı Denetim", "Rotulus Yapı Denetim", "Sarp1 Yapı Denetim", "Sasa Grup", "Sertkaya Yapı Denetim", "Sezz Yapı Denetim", "Yusta Yapı Denetim", "ZRC Yapı Denetim"];
-        const dF = ["Ankara Beton", "Baştaş Beton", "Bek Beton", "Betonel", "Çetinler Beton", "Demka Beton", "Güven Beton", "Hasan Sümer Beton", "Kam Beton", "Kazanbel Beton", "Kocalar Beton", "Limmer Beton", "Uğural Beton", "Zirve Beton"];
-        const dS = ["C-20/25", "C-25/30", "C-30/37", "C-35/45", "C-40/50", "C-45/55", "C-50/60"];
+        const dD = ["A.B.B", "ADŞ Yapı Denetim", "Ankara Yapı Denetim", "Asv Yapı Denetim", "FB Aysam Yapı Denetim", "Keskintek Yapı Denetim", "ZRC Yapı Denetim"];
+        const dF = ["Ankara Beton", "Baştaş Beton", "Bek Beton", "Betonel", "Çetinler Beton", "Güven Beton", "Limmer Beton", "Uğural Beton", "Zirve Beton"];
+        const dS = ["C-20/25", "C-25/30", "C-30/37", "C-35/45", "C-40/50"];
 
         let daysData = {};
         let viewDate = new Date();
-        let editIndex = null;
 
-        // Bulut Bağlantısı
+        // --- BULUT FONKSİYONLARI ---
         async function fetchFromCloud() {
             try {
                 const res = await fetch(`${DB_URL}/data.json`);
                 daysData = await res.json() || {};
                 renderPage();
                 document.getElementById('sync-status').innerText = "Bulutla Eşitlendi ✅";
-            } catch (e) {
-                document.getElementById('sync-status').innerText = "Bağlantı Hatası!";
-            }
+            } catch (e) { document.getElementById('sync-status').innerText = "Bağlantı Hatası!"; }
         }
 
         async function saveToCloud() {
-            document.getElementById('sync-status').innerText = "Kaydediliyor...";
-            await fetch(`${DB_URL}/data.json`, {
-                method: 'PUT',
-                body: JSON.stringify(daysData)
-            });
+            await fetch(`${DB_URL}/data.json`, { method: 'PUT', body: JSON.stringify(daysData) });
             fetchFromCloud();
         }
 
-        // Giriş Kontrolü
         function checkLogin() {
             if(document.getElementById('username').value.toLowerCase() === "krc" && document.getElementById('password').value === "2026") {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('book-container').style.display = 'block';
                 updateSelectMenus();
                 fetchFromCloud();
-                setInterval(fetchFromCloud, 10000); // 10 saniyede bir otomatik yenile
-            }
+                setInterval(fetchFromCloud, 15000);
+            } else { alert("Hatalı giriş!"); }
         }
 
         function updateSelectMenus() {
             document.getElementById('f-sinif').innerHTML = dS.map(i=>`<option value="${i}">${i}</option>`).join('');
-            document.getElementById('f-denetim').innerHTML = `<option value="">Yapı Denetim Seç...</option>` + dD.map(i=>`<option value="${i}">${i}</option>`).join('');
-            document.getElementById('f-firma').innerHTML = `<option value="">Beton Firması Seç...</option>` + dF.map(i=>`<option value="${i}">${i}</option>`).join('');
+            document.getElementById('f-denetim').innerHTML = dD.map(i=>`<option value="${i}">${i}</option>`).join('');
+            document.getElementById('f-firma').innerHTML = dF.map(i=>`<option value="${i}">${i}</option>`).join('');
         }
 
         function autoCalcNumune() {
             const m = parseFloat(document.getElementById('f-metraj').value);
-            const n = document.getElementById('f-numune');
-            if (isNaN(m) || m <= 0) { n.value = ""; return; }
-            let num = (m<=24)?8:(m<=100)?12:(m<=150)?16:(m<=200)?20:(m<=250)?24:(m<=300)?28:(m<=400)?32:(m<=500)?36:(m<=600)?40:40+(Math.ceil((m-600)/200)*4);
-            n.value = num;
+            let num = (m<=24)?8:(m<=100)?12:(m<=150)?16:(m<=200)?20:(m<=250)?24:24;
+            document.getElementById('f-numune').value = num;
         }
 
         function renderPage() {
             const key = viewDate.toISOString().split('T')[0];
             document.getElementById('date-header').innerText = viewDate.toLocaleDateString('tr-TR', { day:'numeric', month:'short', weekday:'short' });
-            const list = document.getElementById('list-container');
             const items = daysData[key] || [];
-            
-            list.innerHTML = items.length === 0 ? `<p style="text-align:center; color:var(--text-dim); margin-top:50px;">Bu tarihte kayıt bulunamadı.</p>` : 
-                items.map((item, i) => `
-                <div class="santiye-card ${item.done ? 'painted' : ''}">
-                    <div class="card-top" onclick="togglePaint('${key}', ${i})">
-                        <span class="santiye-name">${item.name}</span>
-                        <div>
-                            <span class="numune-badge">${item.numuneCount}</span>
-                            <span class="check-mark">✅</span>
-                        </div>
-                    </div>
-                    <div class="card-actions">
-                        <button class="btn-icon" onclick="deleteEntry('${key}', ${i})">SİL</button>
+            document.getElementById('list-container').innerHTML = items.map((item, i) => `
+                <div class="santiye-card ${item.done ? 'painted' : ''}" onclick="togglePaint('${key}', ${i})">
+                    <div class="card-top">
+                        <span style="font-weight:bold;">${item.name}</span>
+                        <span class="numune-badge">${item.numuneCount}</span>
                     </div>
                 </div>`).join('');
         }
 
-        function togglePaint(key, i) {
-            daysData[key][i].done = !daysData[key][i].done;
-            saveToCloud();
-        }
-
+        function togglePaint(key, i) { daysData[key][i].done = !daysData[key][i].done; saveToCloud(); }
         function processEntry() {
             const key = viewDate.toISOString().split('T')[0];
-            const entry = {
-                name: document.getElementById('f-name').value || "İsimsiz",
-                numuneCount: document.getElementById('f-numune').value || "0",
-                done: false,
-                rawData: {
-                    metraj: document.getElementById('f-metraj').value,
-                    sinif: document.getElementById('f-sinif').value,
-                    denetim: document.getElementById('f-denetim').value,
-                    firma: document.getElementById('f-firma').value,
-                    dokum: document.getElementById('f-dokum').value
-                }
-            };
             if(!daysData[key]) daysData[key] = [];
-            daysData[key].push(entry);
-            saveToCloud();
-            closeModals();
+            daysData[key].push({ name: document.getElementById('f-name').value, numuneCount: document.getElementById('f-numune').value, done: false });
+            saveToCloud(); closeModals();
         }
-
-        function deleteEntry(key, i) {
-            if(confirm("Bu kaydı silmek istediğine emin misin?")) {
-                daysData[key].splice(i, 1);
-                saveToCloud();
-            }
-        }
-
         function changeDate(n) { viewDate.setDate(viewDate.getDate() + n); renderPage(); }
-        function openAddModal() { document.querySelectorAll('#overlay-add input').forEach(i=>i.value=""); document.getElementById('overlay-add').style.display='block'; }
-        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m=>m.style.display='none'); }
+        function openAddModal() { document.getElementById('overlay-add').style.display='block'; }
+        function closeModals() { document.getElementById('overlay-add').style.display='none'; }
     </script>
 </body>
 </html>
