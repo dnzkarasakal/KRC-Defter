@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseio.com https://*.firebasedatabase.app;">
-    <title>KRC GLOBAL v31.9</title>
+    <title>KRC YAPI LABORATUVARI</title>
     <style>
         :root { --bg-dark: #0a0d14; --bg-card: #161b22; --accent-red: #d9534f; --text-main: #e6edf3; --text-dim: #7d8590; --border-color: #30363d; }
         body { background: var(--bg-dark); margin: 0; padding: 0; font-family: -apple-system, sans-serif; color: var(--text-main); overflow: hidden; touch-action: manipulation; }
@@ -17,7 +17,7 @@
         .nav-arrow { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--accent-red); padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .page-content { padding: 30px 20px 140px 20px; height: 100%; box-sizing: border-box; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .sync-status { font-size: 10px; color: var(--text-dim); text-align: center; margin-bottom: 10px; }
-        .santiye-card { background: var(--bg-card); margin-bottom: 12px; border-radius: 8px; padding: 18px; border: 1px solid var(--border-color); position: relative; }
+        .santiye-card { background: var(--bg-card); margin-bottom: 12px; border-radius: 8px; padding: 18px; border: 1px solid var(--border-color); }
         .santiye-card.painted { border-left: 6px solid var(--accent-red); background: #1c1112; }
         .card-top { display: flex; justify-content: space-between; align-items: center; }
         .numune-badge { background: #30363d; color: var(--text-main); padding: 5px 12px; border-radius: 6px; font-weight: bold; font-size: 14px; }
@@ -32,8 +32,8 @@
     <div id="login-screen">
         <div class="login-card">
             <img src="krc-logo.png" alt="KRC Logo" style="width: 100px; height: auto; margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto;">
-            <h1 style="color:var(--accent-red); margin:0;">KRC GLOBAL</h1>
-            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">Kayıt Defteri v31.9</p>
+            <h1 style="color:var(--accent-red); margin:0;">KRC YAPI LABORATUVARI</h1>
+            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">Numune Kayıt Defteri</p>
             <input type="text" id="username" placeholder="Kullanıcı">
             <input type="password" id="password" placeholder="Parola">
             <button class="btn-main" onclick="checkLogin()">GİRİŞ</button>
@@ -67,10 +67,7 @@
                 <select id="f-denetim"></select>
                 <select id="f-firma"></select>
                 <input type="text" id="f-dokum" placeholder="Kat / Bölge">
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="f-ortam" placeholder="Ortam °C">
-                    <input type="text" id="f-beton_sicak" placeholder="Beton °C">
-                </div>
+                <div style="display:flex; gap:10px;"><input type="text" id="f-ortam" placeholder="Ortam °C"><input type="text" id="f-beton_sicak" placeholder="Beton °C"></div>
                 <input type="text" id="f-slamp" placeholder="Slump (cm)">
             </div>
             <div style="position:fixed; bottom:0; left:0; width:100%; padding:20px; background:var(--bg-dark); display:flex; gap:10px; box-sizing:border-box;">
@@ -83,14 +80,8 @@
     <div id="overlay-settings" class="modal-overlay">
         <div class="modal">
             <h2 style="color:var(--accent-red)">LİSTE DÜZENLE</h2>
-            <select id="settings-type" onchange="loadSettingsList()">
-                <option value="denetim">Yapı Denetimler</option>
-                <option value="firma">Beton Firmaları</option>
-            </select>
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="text" id="new-item-val" placeholder="Yeni ekle..." style="margin:0;">
-                <button class="btn-main" style="width:80px; padding:0;" onclick="addNewSettingItem()">EKLE</button>
-            </div>
+            <select id="settings-type" onchange="loadSettingsList()"><option value="denetim">Yapı Denetimler</option><option value="firma">Beton Firmaları</option></select>
+            <div style="display:flex; gap:10px; margin-bottom:20px;"><input type="text" id="new-item-val" placeholder="Yeni ekle..."><button class="btn-main" style="width:80px; padding:0;" onclick="addNewSettingItem()">EKLE</button></div>
             <div id="settings-list" style="max-height:300px; overflow-y:auto; background:var(--bg-card); border-radius:8px;"></div>
             <button class="btn-main" style="background:#30363d; margin-top:20px;" onclick="closeModals()">KAPAT</button>
         </div>
@@ -98,21 +89,19 @@
 
     <script>
         const DB_URL = "https://krc-ajanda-default-rtdb.europe-west1.firebasedatabase.app/"; 
-        
-        let config = {
-            denetim: ["A.B.B", "ADŞ Yapı Denetim", "Altındağ Yapı Denetim", "Ankara Yapı Denetim", "Asv Yapı Denetim", "Aybaş Yapı Denetim", "Bahçem Yapı Denetim", "Bayındır Yapı Denetim", "Bolkay HK2 Yapı Denetim", "D.H.M.İ.", "Demer 3M Yapı Denetim", "Engörü Yapı Denetim", "Esen Yapı Denetim", "FB Aysam Yapı Denetim", "İlay Yapı Denetim", "Kare Yapı Denetim", "Kentler Müşavirlik", "Keskintek Yapı Denetim", "Mega Yapı Denetim", "Nace1 Yapı Denetim", "Rotulus Yapı Denetim", "Sarp1 Yapı Denetim", "Sasa Grup", "Sertkaya Yapı Denetim", "Sezz Yapı Denetim", "Yusta Yapı Denetim", "ZRC Yapı Denetim"],
-            firma: ["Ankara Beton", "Baştaş Beton", "Bek Beton", "Betonel", "Çetinler Beton", "Demka Beton", "Güven Beton", "Hasan Sümer Beton", "Kam Beton", "Kazanbel Beton", "Kocalar Beton", "Limmer Beton", "Uğural Beton", "Zirve Beton"],
+        let config = { 
+            denetim: ["A.B.B", "ADŞ Yapı Denetim", "Ankara Yapı Denetim", "Asv Yapı Denetim", "FB Aysam Yapı Denetim", "Keskintek Yapı Denetim", "ZRC Yapı Denetim"],
+            firma: ["Ankara Beton", "Baştaş Beton", "Bek Beton", "Betonel", "Çetinler Beton", "Güven Beton", "Limmer Beton", "Uğural Beton", "Zirve Beton"],
             sinif: ["C-20/25", "C-25/30", "C-30/37", "C-35/45", "C-40/50", "C-45/55", "C-50/60"]
         };
-
-        let daysData = {};
-        let viewDate = new Date();
+        let daysData = {}; let viewDate = new Date();
 
         async function fetchFromCloud() {
             try {
                 const res = await fetch(`${DB_URL}/data.json`);
                 const allData = await res.json() || {};
-                daysData = allData.records || {};
+                // Esnek veri okuma: Hem 'records' hem direkt ana dizin kontrolü
+                daysData = allData.records || (allData.hasOwnProperty('config') ? {} : allData); 
                 if(allData.config) config = allData.config;
                 renderPage();
                 document.getElementById('sync-status').innerText = "Bulutla Eşitlendi ✅";
@@ -120,10 +109,9 @@
         }
 
         async function saveToCloud() {
-            await fetch(`${DB_URL}/data.json`, { 
-                method: 'PUT', 
-                body: JSON.stringify({ records: daysData, config: config }) 
-            });
+            document.getElementById('sync-status').innerText = "Kaydediliyor...";
+            const payload = { records: daysData, config: config };
+            await fetch(`${DB_URL}/data.json`, { method: 'PUT', body: JSON.stringify(payload) });
             fetchFromCloud();
         }
 
@@ -131,15 +119,15 @@
             if(document.getElementById('username').value.toLowerCase() === "krc" && document.getElementById('password').value === "2026") {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('book-container').style.display = 'block';
-                updateSelectMenus();
-                fetchFromCloud();
+                updateSelectMenus(); fetchFromCloud();
+                setInterval(fetchFromCloud, 10000);
             } else { alert("Hatalı giriş!"); }
         }
 
         function updateSelectMenus() {
             document.getElementById('f-sinif').innerHTML = config.sinif.map(i=>`<option value="${i}">${i}</option>`).join('');
-            document.getElementById('f-denetim').innerHTML = `<option value="">Yapı Denetim Seç...</option>` + config.denetim.map(i=>`<option value="${i}">${i}</option>`).join('');
-            document.getElementById('f-firma').innerHTML = `<option value="">Beton Firması Seç...</option>` + config.firma.map(i=>`<option value="${i}">${i}</option>`).join('');
+            document.getElementById('f-denetim').innerHTML = `<option value="">Yapı Denetim Seç...</option>` + config.denetim.sort().map(i=>`<option value="${i}">${i}</option>`).join('');
+            document.getElementById('f-firma').innerHTML = `<option value="">Beton Firması Seç...</option>` + config.firma.sort().map(i=>`<option value="${i}">${i}</option>`).join('');
         }
 
         function autoCalcNumune() {
@@ -152,30 +140,30 @@
             const key = viewDate.toISOString().split('T')[0];
             document.getElementById('date-header').innerText = viewDate.toLocaleDateString('tr-TR', { day:'numeric', month:'short', weekday:'short' });
             const items = daysData[key] || [];
-            document.getElementById('list-container').innerHTML = items.length ? items.map((item, i) => `
+            const container = document.getElementById('list-container');
+            container.innerHTML = items.length ? items.map((item, i) => `
                 <div class="santiye-card ${item.done ? 'painted' : ''}" onclick="togglePaint('${key}', ${i})">
                     <div class="card-top">
                         <span style="font-weight:bold; font-size:18px;">${item.name}</span>
                         <span class="numune-badge">${item.numuneCount}</span>
                     </div>
-                </div>`).join('') : '<p style="text-align:center; color:var(--text-dim); margin-top:40px;">Bu tarihte kayıt bulunmuyor.</p>';
+                    <div style="font-size:11px; color:var(--text-dim); margin-top:5px;">${item.details?.firma || ''} - ${item.details?.denetim || ''}</div>
+                </div>`).join('') : '<p style="text-align:center; color:var(--text-dim); margin-top:40px;">Bu tarih boş.</p>';
         }
 
         function processEntry() {
-            const key = viewDate.toISOString().split('T')[0]; // Hangi tarihteyse o tarihe ekler
+            const key = viewDate.toISOString().split('T')[0];
             if(!daysData[key]) daysData[key] = [];
             daysData[key].push({
-                name: document.getElementById('f-name').value || "İsimsiz Şantiye",
+                name: document.getElementById('f-name').value || "İsimsiz",
                 numuneCount: document.getElementById('f-numune').value || "0",
                 done: false,
                 details: {
                     ortam: document.getElementById('f-ortam').value,
                     beton: document.getElementById('f-beton_sicak').value,
                     slump: document.getElementById('f-slamp').value,
-                    dokum: document.getElementById('f-dokum').value,
                     firma: document.getElementById('f-firma').value,
-                    denetim: document.getElementById('f-denetim').value,
-                    sinif: document.getElementById('f-sinif').value
+                    denetim: document.getElementById('f-denetim').value
                 }
             });
             saveToCloud(); closeModals();
@@ -184,23 +172,20 @@
         function togglePaint(key, i) { daysData[key][i].done = !daysData[key][i].done; saveToCloud(); }
         function changeDate(n) { viewDate.setDate(viewDate.getDate() + n); renderPage(); }
         function openAddModal() { updateSelectMenus(); document.querySelectorAll('#overlay-add input').forEach(i=>i.value=""); document.getElementById('overlay-add').style.display='block'; }
-        
         function openSettings() { loadSettingsList(); document.getElementById('overlay-settings').style.display='block'; }
         function loadSettingsList() {
             const type = document.getElementById('settings-type').value;
-            const list = config[type];
-            document.getElementById('settings-list').innerHTML = list.map((item, i) => `
+            document.getElementById('settings-list').innerHTML = config[type].map((item, i) => `
                 <div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid var(--border-color);">
-                    <span>${item}</span>
-                    <span style="color:red; cursor:pointer; font-weight:bold;" onclick="deleteSettingItem('${type}', ${i})">SİL</span>
+                    <span>${item}</span><span style="color:red; font-weight:bold;" onclick="deleteSettingItem('${type}', ${i})">SİL</span>
                 </div>`).join('');
         }
         function addNewSettingItem() {
             const type = document.getElementById('settings-type').value;
             const val = document.getElementById('new-item-val').value;
-            if(val) { config[type].push(val); config[type].sort(); document.getElementById('new-item-val').value = ""; saveToCloud(); loadSettingsList(); }
+            if(val) { config[type].push(val); document.getElementById('new-item-val').value = ""; saveToCloud(); loadSettingsList(); }
         }
-        function deleteSettingItem(type, i) { if(confirm("Bu öğeyi listeden silmek istediğine emin misin?")) { config[type].splice(i, 1); saveToCloud(); loadSettingsList(); } }
+        function deleteSettingItem(type, i) { if(confirm("Silinsin mi?")) { config[type].splice(i, 1); saveToCloud(); loadSettingsList(); } }
         function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m=>m.style.display='none'); }
     </script>
 </body>
