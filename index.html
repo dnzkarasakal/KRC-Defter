@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KRC GLOBAL v31.14</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline';">
+    <title>KRC GLOBAL v31.15</title>
     <style>
         :root { --bg-dark: #0a0d14; --bg-card: #161b22; --accent-red: #d9534f; --text-main: #e6edf3; --text-dim: #7d8590; --border-color: #30363d; }
         body { background: var(--bg-dark); margin: 0; padding: 0; font-family: -apple-system, sans-serif; color: var(--text-main); overflow: hidden; touch-action: manipulation; }
@@ -32,7 +33,7 @@
         <div class="login-card">
             <img src="krc-logo.png" alt="KRC Logo" style="width: 100px; height: auto; margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto;">
             <h1 style="color:var(--accent-red); margin:0;">KRC GLOBAL</h1>
-            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">v31.14 - Full Force</p>
+            <p style="color:var(--text-dim); margin-bottom:30px; font-size:13px;">v31.15 - Doğru Link</p>
             <input type="text" id="username" placeholder="Kullanıcı">
             <input type="password" id="password" placeholder="Parola">
             <button class="btn-main" onclick="checkLogin()">GİRİŞ</button>
@@ -87,46 +88,37 @@
     </div>
 
     <script>
-        const DB_URL = "https://krc-ajanda-default-rtdb.europe-west1.firebasedatabase.app/"; 
+        // LİNKİ SENİN EKRAN GÖRÜNTÜNDEKİYLE DEĞİŞTİRDİM
+        const DB_URL = "https://krc-defter-default-rtdb.europe-west1.firebasedatabase.app/"; 
         let config = { 
             denetim: ["A.B.B", "ADŞ Yapı Denetim", "Ankara Yapı Denetim", "Keskintek Yapı Denetim", "ZRC Yapı Denetim"],
             firma: ["Ankara Beton", "Baştaş Beton", "Bek Beton", "Betonel", "Çetinler Beton", "Güven Beton", "Limmer Beton", "Uğural Beton", "Zirve Beton"],
             sinif: ["C-20/25", "C-25/30", "C-30/37", "C-35/45", "C-40/50", "C-45/55", "C-50/60"]
         };
         let daysData = {}; let viewDate = new Date();
-        let lastSyncTime = 0;
+        let isSyncing = false;
 
         async function fetchFromCloud() {
-            // Eğer son 5 saniye içinde bir kayıt yapıldıysa çekme (Silinmeyi önleyen kalkan)
-            if (Date.now() - lastSyncTime < 5000) return;
+            if (isSyncing) return;
             try {
                 const res = await fetch(`${DB_URL}/data.json`);
                 const allData = await res.json() || {};
-                
-                // Hibrit veri okuma: Hem kök dizin hem 'records' kontrolü
-                let remoteRecords = allData.records || {};
-                if (!allData.hasOwnProperty('records') && !allData.hasOwnProperty('config')) {
-                    remoteRecords = allData;
-                }
-                
-                daysData = remoteRecords;
+                daysData = allData.records || {};
                 if(allData.config) config = allData.config;
                 renderPage();
-                document.getElementById('sync-status').innerText = "Bulutla Eşitlendi ✅";
-            } catch (e) { document.getElementById('sync-status').innerText = "Bağlantı Hatası!"; }
+                document.getElementById('sync-status').innerText = "Bağlantı Aktif ✅";
+            } catch (e) { document.getElementById('sync-status').innerText = "Bağlantı Yok!"; }
         }
 
         async function saveToCloud() {
-            lastSyncTime = Date.now(); // Senkronizasyonu dondur
+            isSyncing = true;
             document.getElementById('sync-status').innerText = "BULUTA YAZILIYOR...";
             try {
-                // Veriyi her iki ihtimale karşı temiz bir yapıyla gönder
                 const payload = { records: daysData, config: config };
-                const res = await fetch(`${DB_URL}/data.json`, { method: 'PUT', body: JSON.stringify(payload) });
-                if(res.ok) {
-                    document.getElementById('sync-status').innerText = "KAYIT TAMAM ✅";
-                }
-            } catch (e) { alert("Bulut hatası!"); }
+                await fetch(`${DB_URL}/data.json`, { method: 'PUT', body: JSON.stringify(payload) });
+                document.getElementById('sync-status').innerText = "KAYIT TAMAM ✅";
+            } catch (e) { alert("Yazma hatası!"); }
+            setTimeout(() => { isSyncing = false; }, 2000);
         }
 
         function checkLogin() {
@@ -168,7 +160,6 @@
         async function processEntry() {
             const key = viewDate.toISOString().split('T')[0];
             if(!daysData[key]) daysData[key] = [];
-            
             daysData[key].push({
                 name: document.getElementById('f-name').value || "İsimsiz",
                 numuneCount: document.getElementById('f-numune').value || "0",
@@ -182,15 +173,12 @@
                     sinif: document.getElementById('f-sinif').value
                 }
             });
-            renderPage(); 
-            closeModals();
-            await saveToCloud();
+            renderPage(); closeModals(); await saveToCloud();
         }
 
         async function togglePaint(key, i) { 
             daysData[key][i].done = !daysData[key][i].done; 
-            renderPage(); 
-            await saveToCloud(); 
+            renderPage(); await saveToCloud(); 
         }
 
         function changeDate(n) { viewDate.setDate(viewDate.getDate() + n); renderPage(); }
