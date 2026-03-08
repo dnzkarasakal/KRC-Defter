@@ -24,7 +24,7 @@
         .btn-main { width: 100%; padding: 16px; background: var(--accent-red); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 99999; }
         .modal { width: 100%; height: 100%; padding: 25px; box-sizing: border-box; overflow-y: auto; }
-        .fixed-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg-dark) 60%); box-sizing: border-box; }
+        .fixed-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, var(--bg-dark) 60%); box-sizing: border-box; display: flex; gap: 10px; }
     </style>
 </head>
 <body>
@@ -51,7 +51,8 @@
             <div id="list-container"></div>
         </div>
         <div class="fixed-footer">
-            <button class="btn-main" onclick="openAddModal()">+ YENİ ŞANTİYE EKLE</button>
+            <button class="btn-main" onclick="openAddModal()">+ YENİ ŞANTİYE</button>
+            <button class="btn-main" style="background:#30363d; width: 60px;" onclick="openSettings()">⚙️</button>
         </div>
     </div>
 
@@ -73,17 +74,37 @@
                 <input type="text" id="f-slamp" placeholder="Slump (cm)">
             </div>
             <div style="position:fixed; bottom:0; left:0; width:100%; padding:20px; background:var(--bg-dark); display:flex; gap:10px; box-sizing:border-box;">
-                <button class="btn-main" onclick="processEntry()">KAYDET</button>
+                <button class="btn-main" onclick="processEntry()">BULUTA KAYDET</button>
                 <button class="btn-main" style="background:#30363d;" onclick="closeModals()">İPTAL</button>
             </div>
         </div>
     </div>
 
+    <div id="overlay-settings" class="modal-overlay">
+        <div class="modal">
+            <h2 style="color:var(--accent-red)">LİSTE DÜZENLE</h2>
+            <p style="font-size:12px; color:var(--text-dim)">Yapı Denetim veya Beton Firması ekleyip silebilirsin.</p>
+            <select id="settings-type" onchange="loadSettingsList()">
+                <option value="denetim">Yapı Denetimler</option>
+                <option value="firma">Beton Firmaları</option>
+            </select>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="text" id="new-item-val" placeholder="Yeni ekle..." style="margin:0;">
+                <button class="btn-main" style="width:80px; padding:0;" onclick="addNewSettingItem()">EKLE</button>
+            </div>
+            <div id="settings-list" style="max-height:300px; overflow-y:auto;"></div>
+            <button class="btn-main" style="background:#30363d; margin-top:20px;" onclick="closeModals()">KAPAT</button>
+        </div>
+    </div>
+
     <script>
         const DB_URL = "https://krc-ajanda-default-rtdb.europe-west1.firebasedatabase.app/"; 
-        const dD = ["A.B.B", "ADŞ Yapı Denetim", "Altındağ Yapı Denetim", "Ankara Yapı Denetim", "Asv Yapı Denetim", "Aybaş Yapı Denetim", "Bahçem Yapı Denetim", "Bayındır Yapı Denetim", "Bolkay HK2 Yapı Denetim", "D.H.M.İ.", "Demer 3M Yapı Denetim", "Engörü Yapı Denetim", "Esen Yapı Denetim", "FB Aysam Yapı Denetim", "İlay Yapı Denetim", "Kare Yapı Denetim", "Kentler Müşavirlik", "Keskintek Yapı Denetim", "Mega Yapı Denetim", "Nace1 Yapı Denetim", "Rotulus Yapı Denetim", "Sarp1 Yapı Denetim", "Sasa Grup", "Sertkaya Yapı Denetim", "Sezz Yapı Denetim", "Yusta Yapı Denetim", "ZRC Yapı Denetim"];
-        const dF = ["Ankara Beton", "Baştaş Beton", "Bek Beton", "Betonel", "Çetinler Beton", "Demka Beton", "Güven Beton", "Hasan Sümer Beton", "Kam Beton", "Kazanbel Beton", "Kocalar Beton", "Limmer Beton", "Uğural Beton", "Zirve Beton"];
-        const dS = ["C-20/25", "C-25/30", "C-30/37", "C-35/45", "C-40/50", "C-45/55", "C-50/60"];
+        
+        let config = {
+            denetim: ["A.B.B", "ADŞ Yapı Denetim", "Ankara Yapı Denetim", "Asv Yapı Denetim", "FB Aysam Yapı Denetim", "Keskintek Yapı Denetim", "ZRC Yapı Denetim"],
+            firma: ["Ankara Beton", "Baştaş Beton", "Bek Beton", "Betonel", "Çetinler Beton", "Güven Beton", "Limmer Beton", "Uğural Beton", "Zirve Beton"],
+            sinif: ["C-20/25", "C-25/30", "C-30/37", "C-35/45", "C-40/50", "C-45/55", "C-50/60"]
+        };
 
         let daysData = {};
         let viewDate = new Date();
@@ -91,14 +112,19 @@
         async function fetchFromCloud() {
             try {
                 const res = await fetch(`${DB_URL}/data.json`);
-                daysData = await res.json() || {};
+                const allData = await res.json() || {};
+                daysData = allData.records || {};
+                if(allData.config) config = allData.config;
                 renderPage();
                 document.getElementById('sync-status').innerText = "Bulutla Eşitlendi ✅";
             } catch (e) { document.getElementById('sync-status').innerText = "Bağlantı Hatası!"; }
         }
 
         async function saveToCloud() {
-            await fetch(`${DB_URL}/data.json`, { method: 'PUT', body: JSON.stringify(daysData) });
+            await fetch(`${DB_URL}/data.json`, { 
+                method: 'PUT', 
+                body: JSON.stringify({ records: daysData, config: config }) 
+            });
             fetchFromCloud();
         }
 
@@ -113,9 +139,9 @@
         }
 
         function updateSelectMenus() {
-            document.getElementById('f-sinif').innerHTML = dS.map(i=>`<option value="${i}">${i}</option>`).join('');
-            document.getElementById('f-denetim').innerHTML = `<option value="">Yapı Denetim Seç...</option>` + dD.map(i=>`<option value="${i}">${i}</option>`).join('');
-            document.getElementById('f-firma').innerHTML = `<option value="">Beton Firması Seç...</option>` + dF.map(i=>`<option value="${i}">${i}</option>`).join('');
+            document.getElementById('f-sinif').innerHTML = config.sinif.map(i=>`<option value="${i}">${i}</option>`).join('');
+            document.getElementById('f-denetim').innerHTML = `<option value="">Yapı Denetim Seç...</option>` + config.denetim.map(i=>`<option value="${i}">${i}</option>`).join('');
+            document.getElementById('f-firma').innerHTML = `<option value="">Beton Firması Seç...</option>` + config.firma.map(i=>`<option value="${i}">${i}</option>`).join('');
         }
 
         function autoCalcNumune() {
@@ -128,16 +154,14 @@
             const key = viewDate.toISOString().split('T')[0];
             document.getElementById('date-header').innerText = viewDate.toLocaleDateString('tr-TR', { day:'numeric', month:'short', weekday:'short' });
             const items = daysData[key] || [];
-            document.getElementById('list-container').innerHTML = items.map((item, i) => `
+            document.getElementById('list-container').innerHTML = items.length ? items.map((item, i) => `
                 <div class="santiye-card ${item.done ? 'painted' : ''}" onclick="togglePaint('${key}', ${i})">
                     <div class="card-top">
                         <span style="font-weight:bold; font-size:18px;">${item.name}</span>
                         <span class="numune-badge">${item.numuneCount}</span>
                     </div>
-                </div>`).join('');
+                </div>`).join('') : '<p style="text-align:center; color:var(--text-dim); margin-top:40px;">Kayıt yok.</p>';
         }
-
-        function togglePaint(key, i) { daysData[key][i].done = !daysData[key][i].done; saveToCloud(); }
 
         function processEntry() {
             const key = viewDate.toISOString().split('T')[0];
@@ -156,9 +180,28 @@
             saveToCloud(); closeModals();
         }
 
+        function togglePaint(key, i) { daysData[key][i].done = !daysData[key][i].done; saveToCloud(); }
         function changeDate(n) { viewDate.setDate(viewDate.getDate() + n); renderPage(); }
-        function openAddModal() { document.querySelectorAll('#overlay-add input').forEach(i=>i.value=""); document.getElementById('overlay-add').style.display='block'; }
-        function closeModals() { document.getElementById('overlay-add').style.display='none'; }
+        function openAddModal() { updateSelectMenus(); document.querySelectorAll('#overlay-add input').forEach(i=>i.value=""); document.getElementById('overlay-add').style.display='block'; }
+        
+        // --- AYARLAR YÖNETİMİ ---
+        function openSettings() { loadSettingsList(); document.getElementById('overlay-settings').style.display='block'; }
+        function loadSettingsList() {
+            const type = document.getElementById('settings-type').value;
+            const list = config[type];
+            document.getElementById('settings-list').innerHTML = list.map((item, i) => `
+                <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid var(--border-color);">
+                    <span>${item}</span>
+                    <span style="color:red; cursor:pointer;" onclick="deleteSettingItem('${type}', ${i})">SİL</span>
+                </div>`).join('');
+        }
+        function addNewSettingItem() {
+            const type = document.getElementById('settings-type').value;
+            const val = document.getElementById('new-item-val').value;
+            if(val) { config[type].push(val); document.getElementById('new-item-val').value = ""; saveToCloud(); loadSettingsList(); }
+        }
+        function deleteSettingItem(type, i) { if(confirm("Silinsin mi?")) { config[type].splice(i, 1); saveToCloud(); loadSettingsList(); } }
+        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m=>m.style.display='none'); }
     </script>
 </body>
 </html>
